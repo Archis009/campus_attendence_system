@@ -18,7 +18,7 @@ app.use(cors({
         if (!origin) return callback(null, true);
         
         // Allow any localhost origin
-        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin.startsWith('https://campus-attendence-system.vercel.app')) {
             return callback(null, true);
         }
         

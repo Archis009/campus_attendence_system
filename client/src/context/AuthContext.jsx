@@ -1,6 +1,6 @@
 // ...existing code...
 import { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../utils/axiosInstance';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
@@ -36,12 +36,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchMe = async (token) => {
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            };
-            const { data } = await axios.get('http://localhost:5001/api/auth/me', config);
+            const { data } = await api.get('/api/auth/me');
             setUser({ ...data, token }); 
         } catch (error) {
             console.error("Error fetching user", error);
@@ -53,14 +48,14 @@ export const AuthProvider = ({ children }) => {
     }
 
     const login = async (email, password) => {
-        const { data } = await axios.post('http://localhost:5001/api/auth/login', { email, password });
+        const { data } = await api.post('/api/auth/login', { email, password });
         localStorage.setItem('token', data.token);
         setUser(data);
         return data;
     };
 
     const register = async (name, email, password, role) => {
-        const { data } = await axios.post('http://localhost:5001/api/auth/register', { name, email, password, role });
+        const { data } = await api.post('/api/auth/register', { name, email, password, role });
         localStorage.setItem('token', data.token);
         setUser(data);
         return data;

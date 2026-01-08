@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/axiosInstance";
 
 const EnrolledStudentsList = ({ classId }) => {
     const [students, setStudents] = useState([]);
@@ -8,10 +8,7 @@ const EnrolledStudentsList = ({ classId }) => {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const { data } = await axios.get(`http://localhost:5001/api/classes/${classId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const { data } = await api.get(`/api/classes/${classId}`);
                 setStudents(data.students || []);
             } catch (error) {
                 console.error("Error fetching students", error);

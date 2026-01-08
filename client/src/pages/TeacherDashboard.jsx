@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 
 import QRCode from "react-qr-code";
@@ -36,10 +36,7 @@ const TeacherDashboard = () => {
 
   const fetchClasses = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get("http://localhost:5001/api/classes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.get("/api/classes");
       setClasses(data);
     } catch (error) {
       console.error("Error fetching classes", error);
@@ -64,17 +61,13 @@ const TeacherDashboard = () => {
     e.preventDefault();
     if (!newClassName.trim()) return;
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.post(
-        "http://localhost:5001/api/classes",
+      const { data } = await api.post(
+        "/api/classes",
         { 
             className: newClassName,
             days: schedule.days,
             startTime: schedule.startTime,
             endTime: schedule.endTime
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setClasses([...classes, data]);
@@ -89,12 +82,8 @@ const TeacherDashboard = () => {
   const generateQR = async (classId) => {
     setLoadingQr(true);
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        `http://localhost:5001/api/classes/${classId}/qr`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const { data } = await api.get(
+        `/api/classes/${classId}/qr`
       );
       setQrToken(data.qrToken);
       setTimeLeft(60); // 60 seconds
@@ -116,12 +105,8 @@ const TeacherDashboard = () => {
 
   const viewAttendance = async (classId) => {
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        `http://localhost:5001/api/attendance/class/${classId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const { data } = await api.get(
+        `/api/attendance/class/${classId}`
       );
       setAttendanceData(data);
       setSelectedClass(classes.find((c) => c._id === classId));
@@ -134,9 +119,7 @@ const TeacherDashboard = () => {
 
   const downloadCSV = async (classId) => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5001/api/attendance/export/${classId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+        const response = await api.get(`/api/attendance/export/${classId}`, {
             responseType: 'blob',
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));

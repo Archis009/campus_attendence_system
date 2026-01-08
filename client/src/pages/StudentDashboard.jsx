@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useNavigate } from "react-router-dom";
@@ -20,12 +20,8 @@ const StudentDashboard = () => {
 
   const fetchAvailableClasses = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        "http://localhost:5001/api/classes/available",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const { data } = await api.get(
+        "/api/classes/available"
       );
       setAvailableClasses(data);
     } catch (error) {
@@ -35,12 +31,8 @@ const StudentDashboard = () => {
 
   const fetchHistory = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        "http://localhost:5001/api/attendance/history",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const { data } = await api.get(
+        "/api/attendance/history"
       );
       setHistory(data);
     } catch (error) {
@@ -56,13 +48,9 @@ const StudentDashboard = () => {
     
     setMsg("");
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:5001/api/classes/enroll`,
-        { code },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await api.post(
+        `/api/classes/enroll`,
+        { code }
       );
       setMsg("Successfully enrolled & marked present!");
       setClassIdToJoin("");
@@ -75,13 +63,9 @@ const StudentDashboard = () => {
 
   const markAttendance = async (tokenData) => {
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.post(
-        "http://localhost:5001/api/attendance/mark",
-        { token: tokenData },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const { data } = await api.post(
+        "/api/attendance/mark",
+        { token: tokenData }
       );
       setMsg(data.message);
       fetchHistory();
