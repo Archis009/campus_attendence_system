@@ -16,12 +16,18 @@ app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
         // Allow any localhost origin
-        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin.startsWith('https://campus-attendence-system.vercel.app/') || origin.startsWith('https://campus-attendence-system-zmp1.vercel.app/')) {
+        if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
             return callback(null, true);
         }
-        
+
+        // Allow Vercel deployments or other frontends that include the project name
+        // e.g. https://campus-attendence-system-joca.vercel.app or https://campus-attendence-system-zmp1.vercel.app
+        if (origin.includes('campus-attendence-system')) {
+            return callback(null, true);
+        }
+
+        // Allow explicit FRONTEND_URL from env if set
         if (origin === process.env.FRONTEND_URL) {
             return callback(null, true);
         }
@@ -31,6 +37,8 @@ app.use(cors({
     },
     credentials: true
 }));
+// Ensure preflight requests are handled
+app.options('*', cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
