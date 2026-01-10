@@ -23,7 +23,7 @@ const Register = () => {
       else if (data.role === "teacher") navigate("/teacher");
     } catch (error) {
       setLoading(false);
-      const message = error.response?.data?.message || "Registration failed. Please try again.";
+      const message = error.response?.data?.error || error.response?.data?.message || "Registration failed. Please try again.";
       setError(message);
       console.error("Registration error:", error);
     }
