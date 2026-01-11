@@ -90,7 +90,13 @@ const getClassAttendance = async (req, res) => {
         return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const records = await Attendance.find({ classId })
+    // Filter for last 7 days (7 * 24 * 60 * 60 * 1000 ms)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const records = await Attendance.find({ 
+        classId,
+        date: { $gte: sevenDaysAgo }
+    })
         .populate('studentId', 'name email')
         .sort({ date: -1 });
     
