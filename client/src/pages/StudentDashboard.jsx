@@ -186,8 +186,7 @@ const StudentDashboard = () => {
                   ) : (
                       availableClasses.map((cls) => (
                           <div key={cls._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-700/30 p-3 rounded-lg border border-gray-700/50 hover:bg-gray-700/50 transition-colors gap-3">
-                              <div className="flex justify-between items-start mb-2 w-full sm:w-auto">
-                                <div>
+                                <div className="w-full sm:w-auto">
                                   <h3 className="font-bold text-white text-lg">{cls.className}</h3>
                                   <p className="text-gray-400 text-sm">Teacher: {cls.teacherId?.name || "Unknown"}</p>
                                   {cls.startTime && cls.endTime && (
@@ -209,11 +208,10 @@ const StudentDashboard = () => {
                                 </div>
                                 <button 
                                   onClick={() => joinClass(null, cls.code)}
-                                  className="px-3 py-1 bg-blue-600/20 text-blue-400 text-xs font-semibold rounded hover:bg-blue-600 hover:text-white transition-all border border-blue-600/30"
+                                  className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 whitespace-nowrap self-center"
                                 >
                                   Quick Join
                                 </button>
-                              </div>
 
                           </div>
                       ))
