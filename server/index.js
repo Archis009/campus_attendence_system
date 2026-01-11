@@ -12,17 +12,17 @@ connectDB();
 
 // Middleware
 app.use(express.json());
-app.use(cors({
+const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
+        
         // Allow any localhost origin
         if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
             return callback(null, true);
         }
 
         // Allow Vercel deployments or other frontends that include the project name
-        // e.g. https://campus-attendence-system-joca.vercel.app or https://campus-attendence-system-zmp1.vercel.app
         if (origin.includes('campus-attendence-system')) {
             return callback(null, true);
         }
@@ -36,9 +36,11 @@ app.use(cors({
         return callback(new Error(msg), false);
     },
     credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 // Ensure preflight requests are handled
-app.options(/.*/, cors());
+app.options(/.*/, cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
 
