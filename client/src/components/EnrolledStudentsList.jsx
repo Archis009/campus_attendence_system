@@ -46,6 +46,7 @@ const EnrolledStudentsList = ({ classId }) => {
                                 <span className={`px-2 py-1 rounded-full text-xs font-bold border ${
                                     student.status === 'Present' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                                     student.status === 'Absent' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                    student.status === 'Not Enrolled' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
                                     'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                                 }`}>
                                     {student.status}

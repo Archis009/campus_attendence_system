@@ -194,7 +194,6 @@ const getLiveAttendanceStatus = async (req, res) => {
         }
 
         // Get today's attendance Record
-        // We use a broader range or just check "last 12 hours" to be safe, but "today" is standard
         const startOfDay = new Date();
         startOfDay.setHours(0,0,0,0);
         const endOfDay = new Date();
@@ -205,40 +204,43 @@ const getLiveAttendanceStatus = async (req, res) => {
             date: { $gte: startOfDay, $lte: endOfDay }
         });
 
+        // User dependency (Ensure User model is required at top if not already)
+        // const User = require('../models/User'); // We assume it's available or we add it. 
+        // Best to add require at top.
+
+        // Get ALL students in the system
+        const allStudents = await require('../models/User').find({ role: 'student' });
+
         // Map students to status
-        const liveStatus = classObj.students.map(student => {
+        const liveStatus = allStudents.map(student => {
+            const isEnrolled = classObj.students.some(s => s._id.toString() === student._id.toString());
             const record = attendanceRecords.find(r => r.studentId.toString() === student._id.toString());
             
-            let status = 'Waiting to join';
-            if (record) {
-                status = 'Present'; // Or 'Left' if leaveTime exists? Requirement says "Present" or "Absent" mostly.
-                // User requirement: "keep on updating... initial state Waiting to join... after class ends if didn't join show Absent"
-                // For now, if they have a record, they are 'Present' (or have attended).
-                // If the class has officially "ended" (based on schedule), we could mark 'Waiting' as 'Absent'.
-                
-                // Let's refine based on user prompt: "show every student ... with 'present' or 'absent' status ... initial state 'Waiting to join'"
-            } else {
-                 // Check if class time is over
-                 if (classObj.endTime) {
-                    const now = new Date();
-                    const [endHour, endMinute] = classObj.endTime.split(':').map(Number);
-                    const classEndTime = new Date();
-                    classEndTime.setHours(endHour, endMinute, 0);
+            let status = 'Not Enrolled';
 
-                    // If simple time compare:
-                    const currentTimeVal = now.getHours() * 60 + now.getMinutes();
-                    const endTimeVal = endHour * 60 + endMinute;
+            if (isEnrolled) {
+                status = 'Waiting to join';
+                if (record) {
+                    status = 'Present'; 
+                } else {
+                    // Check if class time is over (Absent Logic)
+                    if (classObj.endTime) {
+                        const now = new Date();
+                        const [endHour, endMinute] = classObj.endTime.split(':').map(Number);
+                        
+                        const currentTimeVal = now.getHours() * 60 + now.getMinutes();
+                        const endTimeVal = endHour * 60 + endMinute;
 
-                    // Also check if it's the right day
-                    const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    const currentDay = daysMap[now.getDay()];
-                    
-                    if (classObj.days.includes(currentDay) && currentTimeVal > endTimeVal) {
-                        status = 'Absent';
+                        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const currentDay = daysMap[now.getDay()];
+                        
+                        if (classObj.days.includes(currentDay) && currentTimeVal > endTimeVal) {
+                            status = 'Absent';
+                        }
                     }
-                 }
+                }
             }
-
+            
             return {
                 _id: student._id,
                 name: student.name,
