@@ -222,22 +222,22 @@ const getLiveAttendanceStatus = async (req, res) => {
                 status = 'Waiting to join';
                 if (record) {
                     status = 'Present'; 
-                } else {
-                    // Check if class time is over (Absent Logic)
-                    if (classObj.endTime) {
-                        const now = new Date();
-                        const [endHour, endMinute] = classObj.endTime.split(':').map(Number);
-                        
-                        const currentTimeVal = now.getHours() * 60 + now.getMinutes();
-                        const endTimeVal = endHour * 60 + endMinute;
+                }
+            }
 
-                        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                        const currentDay = daysMap[now.getDay()];
-                        
-                        if (classObj.days.includes(currentDay) && currentTimeVal > endTimeVal) {
-                            status = 'Absent';
-                        }
-                    }
+            // Global Absent Check: If class ended and student is not Present, mark Absent
+            if (status !== 'Present' && classObj.endTime) {
+                const now = new Date();
+                const [endHour, endMinute] = classObj.endTime.split(':').map(Number);
+                
+                const currentTimeVal = now.getHours() * 60 + now.getMinutes();
+                const endTimeVal = endHour * 60 + endMinute;
+
+                const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const currentDay = daysMap[now.getDay()];
+                
+                if (classObj.days.includes(currentDay) && currentTimeVal > endTimeVal) {
+                    status = 'Absent';
                 }
             }
             
