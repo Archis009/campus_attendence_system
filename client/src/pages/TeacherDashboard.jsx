@@ -326,14 +326,15 @@ const TeacherDashboard = () => {
                       <tr className="border-b border-gray-700 text-gray-400 text-sm uppercase">
                         <th className="py-3 px-4">Student</th>
                         <th className="py-3 px-4">Email</th>
-                        <th className="py-3 px-4">Time</th>
+                        <th className="py-3 px-4">Joined</th>
+                        <th className="py-3 px-4">Left</th>
                         <th className="py-3 px-4 text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="text-gray-300">
                       {attendanceData.length === 0 ? (
                            <tr>
-                                <td colSpan="4" className="py-8 text-center text-gray-500">No attendance records found.</td>
+                                <td colSpan="5" className="py-8 text-center text-gray-500">No attendance records found.</td>
                            </tr>
                       ) : (
                           attendanceData.map((record) => (
@@ -341,7 +342,10 @@ const TeacherDashboard = () => {
                             <td className="py-3 px-4 font-medium text-white">{record.studentId?.name || "Unknown"}</td>
                             <td className="py-3 px-4 text-gray-400 text-sm">{record.studentId?.email || "Unknown"}</td>
                             <td className="py-3 px-4 text-sm font-mono">
-                                {new Date(record.date).toLocaleString()}
+                                {new Date(record.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </td>
+                            <td className="py-3 px-4 text-sm font-mono">
+                                {record.leaveTime ? new Date(record.leaveTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}
                             </td>
                             <td className="py-3 px-4 text-center">
                                 <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20">

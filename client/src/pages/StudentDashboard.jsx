@@ -74,6 +74,17 @@ const StudentDashboard = () => {
     }
   };
 
+  const endClass = async (classId) => {
+    try {
+        await api.post('/api/attendance/end', { classId });
+        setMsg("Class ended successfully");
+        fetchHistory();
+    } catch (error) {
+        console.error("Error ending class", error);
+        setMsg(error.response?.data?.message || "Error ending class");
+    }
+  };
+
   useEffect(() => {
     // Small timeout to ensure DOM is ready and prevent potential double-init issues in strict mode
     const timer = setTimeout(() => {
@@ -274,15 +285,34 @@ const StudentDashboard = () => {
                                         hour: '2-digit', 
                                         minute: '2-digit'
                                     })}
+                                    {record.leaveTime && (
+                                        <>
+                                            <span className="mx-2">-</span>
+                                            {new Date(record.leaveTime).toLocaleTimeString(undefined, {
+                                                hour: '2-digit', 
+                                                minute: '2-digit'
+                                            })}
+                                        </>
+                                    )}
                                 </p>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                record.status === "Present" 
-                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-                                    : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                }`}>
-                                {record.status}
-                            </span>
+                            <div className="flex items-center gap-3">
+                                {!record.leaveTime && (
+                                    <button
+                                        onClick={() => endClass(record.classId?._id)}
+                                        className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors text-xs font-semibold"
+                                    >
+                                        End Class
+                                    </button>
+                                )}
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    record.status === "Present" 
+                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                                    }`}>
+                                    {record.status}
+                                </span>
+                            </div>
                         </div>
                         ))
                     )}

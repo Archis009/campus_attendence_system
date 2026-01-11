@@ -137,9 +137,131 @@ const exportAttendance = async (req, res) => {
     res.send(csv);
 };
 
+
+// @desc    End class (Student leaves)
+// @route   POST /api/attendance/end
+// @access  Private (Student)
+const endClass = async (req, res) => {
+    const { classId } = req.body;
+
+    if (!classId) {
+        return res.status(400).json({ message: 'Class ID is required' });
+    }
+
+    try {
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23,59,59,999);
+
+        // Find today's attendance record
+        const attendance = await Attendance.findOne({
+            classId,
+            studentId: req.user._id,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (!attendance) {
+            return res.status(404).json({ message: 'Attendance record not found for today. Did you join?' });
+        }
+
+        // Update leave time - keep the latest time if they click multiple times
+        attendance.leaveTime = new Date();
+        await attendance.save();
+
+        res.json({ message: 'Class ended successfully', leaveTime: attendance.leaveTime });
+
+    } catch (error) {
+        console.error("Error ending class:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get live status of all enrolled students
+// @route   GET /api/attendance/live/:classId
+// @access  Private (Teacher)
+const getLiveAttendanceStatus = async (req, res) => {
+    const { classId } = req.params;
+
+    try {
+        const classObj = await Class.findById(classId).populate('students', 'name email');
+        if (!classObj) {
+            return res.status(404).json({ message: 'Class not found' });
+        }
+
+        if (classObj.teacherId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Get today's attendance Record
+        // We use a broader range or just check "last 12 hours" to be safe, but "today" is standard
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23,59,59,999);
+
+        const attendanceRecords = await Attendance.find({ 
+            classId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        // Map students to status
+        const liveStatus = classObj.students.map(student => {
+            const record = attendanceRecords.find(r => r.studentId.toString() === student._id.toString());
+            
+            let status = 'Waiting to join';
+            if (record) {
+                status = 'Present'; // Or 'Left' if leaveTime exists? Requirement says "Present" or "Absent" mostly.
+                // User requirement: "keep on updating... initial state Waiting to join... after class ends if didn't join show Absent"
+                // For now, if they have a record, they are 'Present' (or have attended).
+                // If the class has officially "ended" (based on schedule), we could mark 'Waiting' as 'Absent'.
+                
+                // Let's refine based on user prompt: "show every student ... with 'present' or 'absent' status ... initial state 'Waiting to join'"
+            } else {
+                 // Check if class time is over
+                 if (classObj.endTime) {
+                    const now = new Date();
+                    const [endHour, endMinute] = classObj.endTime.split(':').map(Number);
+                    const classEndTime = new Date();
+                    classEndTime.setHours(endHour, endMinute, 0);
+
+                    // If simple time compare:
+                    const currentTimeVal = now.getHours() * 60 + now.getMinutes();
+                    const endTimeVal = endHour * 60 + endMinute;
+
+                    // Also check if it's the right day
+                    const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    const currentDay = daysMap[now.getDay()];
+                    
+                    if (classObj.days.includes(currentDay) && currentTimeVal > endTimeVal) {
+                        status = 'Absent';
+                    }
+                 }
+            }
+
+            return {
+                _id: student._id,
+                name: student.name,
+                email: student.email,
+                status: status,
+                joinTime: record ? record.date : null,
+                leaveTime: record ? record.leaveTime : null
+            };
+        });
+
+        res.json(liveStatus);
+
+    } catch (error) {
+         console.error("Error fetching live status:", error);
+         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     markAttendance,
     getHistory,
     getClassAttendance,
-    exportAttendance
+    exportAttendance,
+    endClass,
+    getLiveAttendanceStatus
 };
