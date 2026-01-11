@@ -40,33 +40,35 @@ const getClasses = async (req, res) => {
     }
 
     // Filter out classes that are not currently active based on schedule
-    const now = new Date();
-    const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentDay = daysMap[now.getDay()];
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    // Teachers should see all their classes regardless of time
+    if (req.user.role !== 'teacher') {
+        const now = new Date();
+        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDay = daysMap[now.getDay()];
+        const currentTime = now.getHours() * 60 + now.getMinutes();
 
-    classes = classes.filter(cls => {
-        // If no schedule is set, hide it (invalid/old class)
-        if (!cls.days || cls.days.length === 0 || !cls.startTime || !cls.endTime) {
-            return false;
-        }
+        classes = classes.filter(cls => {
+            // If no schedule is set, hide it (invalid/old class)
+            if (!cls.days || cls.days.length === 0 || !cls.startTime || !cls.endTime) {
+                return false;
+            }
 
-        // Check Day
-        if (!cls.days.includes(currentDay)) {
-            return false;
-        }
+            // Check Day
+            if (!cls.days.includes(currentDay)) {
+                return false;
+            }
 
-        // Check Time
-        const [startHour, startMinute] = cls.startTime.split(':').map(Number);
-        const startTime = startHour * 60 + startMinute;
+            // Check Time
+            const [startHour, startMinute] = cls.startTime.split(':').map(Number);
+            const startTime = startHour * 60 + startMinute;
 
-        const [endHour, endMinute] = cls.endTime.split(':').map(Number);
-        const endTime = endHour * 60 + endMinute;
+            const [endHour, endMinute] = cls.endTime.split(':').map(Number);
+            const endTime = endHour * 60 + endMinute;
 
-        // Show class if it hasn't ended yet (Current time <= End Time)
-        // This includes currently running AND upcoming classes for the day.
-        return currentTime <= endTime;
-    });
+            // Show class if it hasn't ended yet (Current time <= End Time)
+            return currentTime <= endTime;
+        });
+    }
 
     res.json(classes);
 };
